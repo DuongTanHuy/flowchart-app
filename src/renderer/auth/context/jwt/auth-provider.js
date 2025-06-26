@@ -3,7 +3,7 @@ import { useEffect, useReducer, useCallback, useMemo } from 'react';
 // utils
 
 import { AuthContext } from './auth-context';
-import { getStorage } from '../../../hooks/use-local-storage';
+import { getStorage, setStorage } from '../../../hooks/use-local-storage';
 import {
   STORAGE_KEY,
   TERMINAL_SETTING,
@@ -136,6 +136,15 @@ export function AuthProvider({ children }) {
 
   const initialize = useCallback(async () => {
     try {
+      if (process.env.NODE_ENV === 'production') {
+        await window?.electron?.ipcRenderer?.once('get-file-path', (arg) => {
+          if (arg) {
+            setStorage('resourcePath', arg);
+          }
+        });
+        await window?.electron?.ipcRenderer?.sendMessage('get-file-path');
+      }
+
       const accessToken = getStorage(STORAGE_KEY);
       if (accessToken) {
         const user = getStorage(USER_INFORMATION);
